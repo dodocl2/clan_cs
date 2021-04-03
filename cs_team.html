@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <style>
+            html, body {
+                font-size: 14px;
+            }
+            .bd01 {
+                border: 1px solid #000;
+                padding: 4px;
+            }
+            .inline-b {
+                display: inline-block;
+            }
+            .inline {
+                display: inline;
+            }
+            .inline-g {
+                display: inline-grid;
+            }
+            .align-r {
+                text-align: right;
+            }
+            .bg1 {
+                background-color: #f0f0f0;
+            }
+            .member {
+                padding: 2px 2px;
+            }
+            .member:hover {
+                background-color: rgb(178, 220, 240);
+            }
+            .m-name {
+                width: calc(100% - 70px);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="main" style="display: none; width: 100%; height: 100%;">
+            <div class="inline-g" style="float: left; width: 350px; ">
+                <div class="bd01 inline-b" style="width: 100%;">
+                    <textarea style="width: 95%; height: 50px;"
+                        v-model="regMemberSrc"
+                    ></textarea>
+                    <button @click="regMembers">팀 등록</button>
+                    <span>공백, 콤마, 엔터 구분</span>
+                </div>
+                <div class="align-r" style="margin-top: 10px;">
+                    <button @click="delAllMembers">전체삭제</button>
+                    <span>전체 : {{members.length}}명</span>
+                    <span>선택 : {{selectedMembers.length}}명</span>
+                </div>
+                <div class="bd01" style="width: 100%; ">
+                    <div class="member"
+                        v-for="(member, i) in members"
+                        :class="{
+                            bg1: i%2==0
+                        }"
+                    >
+                        <!--                         
+                        <input type="checkbox"
+                            :value="member"
+                            v-model="selectedMembers"
+                        />
+                        -->
+                        <span class="m-no">{{i+1}}.</span>
+                        <div class="m-name inline-b">{{member}}</div>
+                        <button class="inline" @click="delMembers(member)">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <!-- 
+            <div class="inline-b" style="width: 200px; min-height: 300px;">
+                <div class="bd01" style="width: 100%; min-height: 300px;">
+                    <div class="member"
+                        v-for="(member, i) in selectedMembers"
+                        :class="{
+                            bg1: i%2==0
+                        }"
+                    >
+                        <span class="m-no">{{i+1}}.</span>
+                        <div class="m-name inline">{{member}}</div>
+                    </div>
+                </div>
+            </div>
+             -->
+            <div class="inline-g" style="width: 350px; min-height: 200px; margin-left: 20px;">
+                <div class="bd01" style="width: 100%;">
+                    <div>
+                        <span>팀 수</span>
+                        <select v-model="teamSize">
+                            <option v-for="n in 10">{{n}}</option>
+                        </select>
+                        <span>팀당 인원</span>
+                        <select v-model="memberCntForTeam">
+                            <option v-for="n in 4">{{n}}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button @click="devideTeams">나누기 gogo</button>
+                        <button @click="copyTeamsText">텍스트 복사</button>
+                    </div>
+                    <div style="margin-top: 10px">
+                        <div v-for="(team, i) in teams">
+                            <span>{{i+1}}팀 : </span>
+                            <span>{{team.join(', ')}}</span>
+                        </div>
+                        <div style="margin-top: 20px;"
+                            v-if="obsTeam.length > 0">
+                            <span>옵저버({{obsTeam.length}}) : </span>
+                            <span>{{obsTeam.join(', ')}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        window.v = new Vue({
+            el: '#main',
+            data() {
+                return {
+                    regMemberSrc: '',
+                    members: [],
+                    selectedMembers: [],
+                    useObs: false,
+                    memberCntForTeam: 3,
+                    teamSize: 4,
+                    teams: [],
+                    obsTeam: [],
+                }
+            },
+            watch: {
+                members: function(){
+                    this.saveAll();
+                },
+                selectedMembers: function(){
+                    this.saveAll();
+                },
+                regMemberSrc: function(){
+                    this.saveAll();
+                },
+                teams: function(){
+                    this.saveAll();
+                },
+                obsTeam: function(){
+                    this.saveAll();
+                },
+            },
+            computed: {
+            },
+            created() {
+                this.loadAll();
+            },
+            mounted() {
+                this.$el.style.display = '';
+            },
+            methods: {
+                loadAll: function(){
+                    let str = localStorage.getItem('savedata');
+                    if(!str) return;
+                    let obj = JSON.parse(str);
+                    console.log('load data :', obj);
+
+                    try{
+                        Object.assign(this, obj);
+                    }catch(e){
+                        console.error('load data error');
+                        localStorage.removeItem('savedata');
+                    }
+                },
+                saveAll: function(){
+                    clearTimeout(this._timer_savedata);
+                    setTimeout(() => {
+                        let obj = {};
+                        for(var k in v.$data){
+                            obj[k] = v.$data[k];
+                        }
+                        localStorage.setItem('savedata', JSON.stringify(obj));
+                    }, 200);
+                },
+                regMembers: function(){
+                    let list = [];
+                    this.regMemberSrc.trim().split(' ').forEach(a => {
+                        a.split(',').forEach(b => {
+                            b.split('\n').forEach(c => {
+                                c = c.trim();
+                                if(!c) return;
+                                list.push(c);
+                            })
+                        })
+                    });
+                    
+                    if(list.length === 0) return;
+                    console.log('reg src :', list.length, list);
+                    
+                    list.forEach(m => {
+                        if(this.members.includes(m)) return;
+                        console.log('add :', m);
+                        this.members.push(m);
+                    });
+                    this.members.sort();
+                },
+                delAllMembers: function(){
+                    if(!confirm('전체삭제??? 레알???')) return;
+                    this.members = [];
+                    this.selectedMembers = [];
+                },
+                delMembers: function(ms){
+                    if(!ms) return;
+                    if(typeof ms == 'string') ms = [ms];
+                    ms.forEach(m => {
+                        let idx = this.members.indexOf(m);
+                        if(idx > -1) this.members.splice(idx, 1);
+
+                        idx = this.selectedMembers.indexOf(m);
+                        if(idx > -1) this.selectedMembers.splice(idx, 1);
+                    });
+                },
+                devideTeams: function(){
+                    let teams = this.teams = new Array(parseInt(this.teamSize));
+                    let list = this.members.concat();
+
+                    for(let i=0; i<teams.length; i++){
+                        let team = teams[i] = teams[i] || [];
+                        while(list.length > 0 && team.length < this.memberCntForTeam){
+                            let idx = parseInt(Math.random() * list.length);
+                            team.push( list[idx] );
+                            list.splice(idx, 1);
+                        }
+                    }
+                    
+                    this.obsTeam = list;
+                },
+                copyTeamsText: function(){
+                    let text = [];
+                    this.teams.forEach((team, i) => {
+                        let t = `${i+1}팀 : ${team.join(', ')}`;
+                        text.push(t);
+                    });
+
+                    if(this.obsTeam.length > 0){
+                        text.push(`옵 : ${this.obsTeam.join(', ')}`);
+                    }
+
+                    let tempElem = document.createElement('textarea');
+                    tempElem.value = text.join(' / ');
+                    document.body.appendChild(tempElem);
+
+                    tempElem.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(tempElem);
+                }
+            },
+            
+        });
+        console.log('v :', v);
+    </script>
+</html>
