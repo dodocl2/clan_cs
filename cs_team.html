@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Cs 팀 나누기 즐겜 고고</title>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <style>
             html, body {
@@ -32,7 +33,7 @@
                 background-color: rgb(178, 220, 240);
             }
             .m-name {
-                width: calc(100% - 70px);
+                width: calc(100% - 100px);
             }
         </style>
     </head>
@@ -58,12 +59,10 @@
                             bg1: i%2==0
                         }"
                     >
-                        <!--                         
                         <input type="checkbox"
                             :value="member"
                             v-model="selectedMembers"
                         />
-                        -->
                         <span class="m-no">{{i+1}}.</span>
                         <div class="m-name inline-b">{{member}}</div>
                         <button class="inline" @click="delMembers(member)">삭제</button>
