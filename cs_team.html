@@ -52,7 +52,7 @@
                     <span>전체 : {{members.length}}명</span>
                     <span>선택 : {{selectedMembers.length}}명</span>
                 </div>
-                <div class="bd01" style="width: 100%; ">
+                <div class="bd01" style="width: 100%;">
                     <div class="member"
                         v-for="(member, i) in members"
                         :class="{
@@ -132,6 +132,7 @@
             },
             watch: {
                 members: function(){
+                    this.calcTeamCount();
                     this.saveAll();
                 },
                 selectedMembers: function(){
@@ -216,6 +217,12 @@
                         idx = this.selectedMembers.indexOf(m);
                         if(idx > -1) this.selectedMembers.splice(idx, 1);
                     });
+                },
+                calcTeamCount: function(){
+                    if(this.members.length === 0) return;
+                    let teamSize = Math.floor(this.members.length / this.memberCntForTeam);
+                    teamSize -= teamSize % 2;
+                    this.teamSize = teamSize;
                 },
                 devideTeams: function(){
                     let teams = this.teams = new Array(parseInt(this.teamSize));
