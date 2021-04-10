@@ -113,6 +113,22 @@
                     </div>
                 </div>
             </div>
+            <div class="inline-g" style="width: 350px; min-height: 150px; margin-left: 20px; margin-top: 20px;">
+                <div class="bd01" style="width: 100%;">
+                    <div>
+                        승률 계산. 좌측에 승 띄고 패 입력.<br>
+                        ex) |20 10 | 66.67%|
+                    </div>
+                    <div style="height: 100%;">
+                        <textarea style="width: 80px;height: calc(100% - 50px);margin: 0px;float: left;"
+                            v-model="winningRate.src"
+                        ></textarea>
+                        <textarea readonly style="width: 80px;height: calc(100% - 50px);text-align: right;float: left;"
+                            v-model="winningRate.result"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
     <script>
@@ -128,26 +144,29 @@
                     teamSize: 4,
                     teams: [],
                     obsTeam: [],
+                    winningRate: {
+                        src: '',
+                        result: ''
+                    }
                 }
             },
-            watch: {
-                members: function(){
-                    this.calcTeamCount();
-                    this.saveAll();
-                },
-                selectedMembers: function(){
-                    this.saveAll();
-                },
-                regMemberSrc: function(){
-                    this.saveAll();
-                },
-                teams: function(){
-                    this.saveAll();
-                },
-                obsTeam: function(){
-                    this.saveAll();
-                },
-            },
+            watch: (()=>{
+                let obj = {
+                    members: function(){
+                        this.calcTeamCount();
+                        this.saveAll();
+                    },
+                    'winningRate.src': function(){
+                        this.calcWinningRate();
+                    }
+                };
+                ['selectedMembers', 'regMemberSrc', 'teams', 'obsTeam'].forEach(t => {
+                    obj[t] = function(){
+                        this.saveAll();
+                    };
+                })
+                return obj;
+            })(),
             computed: {
             },
             created() {
@@ -257,6 +276,30 @@
                     tempElem.select();
                     document.execCommand("copy");
                     document.body.removeChild(tempElem);
+                },
+                calcWinningRate: function(){
+                    let rateList = [];
+                    this.winningRate.src.split('\n').forEach(line => {
+                        let point = [];
+                        line.trim().split(' ').forEach(str => {
+                            if(point.length === 2) return;
+                            
+                            str = str.trim();
+                            if(str.length === 0) return;
+                            else if(isNaN(str)) return;
+                            
+                            point.push(parseInt(str));
+                        });
+                        if(point.length !== 2) return;
+                        
+                        console.log(point);
+                        rateList.push(
+                            (point[0] / (point[0] + point[1]) * 100).toFixed(2)
+                            + '%'
+                        );
+                    });
+
+                    this.winningRate.result = rateList.join('\n');
                 }
             },
             
