@@ -286,9 +286,16 @@
                             
                             str = str.trim();
                             if(str.length === 0) return;
-                            else if(isNaN(str)) return;
                             
-                            point.push(parseInt(str));
+                            try{
+                                let v = eval(str);
+                                v = parseFloat(v);
+                                if(isNaN(v)) return;
+                                
+                                point.push(v);
+                            }catch(e){
+                                return;
+                            }
                         });
                         if(point.length !== 2) return;
                         
