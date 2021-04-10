@@ -158,6 +158,7 @@
                     },
                     'winningRate.src': function(){
                         this.calcWinningRate();
+                        this.saveAll();
                     }
                 };
                 ['selectedMembers', 'regMemberSrc', 'teams', 'obsTeam'].forEach(t => {
