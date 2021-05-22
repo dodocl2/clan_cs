@@ -32,8 +32,53 @@
             .member:hover {
                 background-color: rgb(178, 220, 240);
             }
+            .m-no {
+                display: inline-block;
+                width: 17px;
+                text-align: right;
+            }
             .m-name {
-                width: calc(100% - 100px);
+                width: calc(100% - 200px);
+                padding: 2px;
+                border-radius: 2px;
+            }
+            .m-tribes {
+                vertical-align: top;
+            }
+
+            .team-member {
+                padding: 2px 2px;
+                margin: 2px 2px;
+                border-radius: 2px;
+                cursor: pointer;
+            }
+            [data-tribe] {
+                position: relative;
+                border-radius: 2px;
+            }
+            [data-tribe="zerg"] {
+                background-color: rgb(255 0 0 / 70%);
+                color: #fff;
+            }
+            [data-tribe="zerg"]:before {
+                content: 'z:';
+            }
+            [data-tribe="protoss"] {
+                background-color: rgb(255 255 0 / 80%);
+            }
+            [data-tribe="protoss"]:before {
+                content: 'p:';
+            }
+            [data-tribe="terran"] {
+                background-color: rgb(0 0 255 / 70%);
+                color: #fff;
+            }
+            [data-tribe="terran"]:before {
+                content: 't:';
+            }
+            [data-tribe="random"] {
+                background-color: rgb(0 128 0 / 70%);
+                color: #fff;
             }
         </style>
     </head>
@@ -64,8 +109,22 @@
                             v-model="selectedMembers"
                         />
                         <span class="m-no">{{i+1}}.</span>
-                        <div class="m-name inline-b">{{member}}</div>
-                        <button class="inline" @click="delMembers(member)">삭제</button>
+                        <div class="m-name inline-b"
+                            :data-tribe="member.tribe"
+                        >{{member.name}}</div>
+
+                        <div class="m-tribes inline-b">
+                            <select
+                                v-model="member.tribe"
+                                :data-tribe="member.tribe"
+                            >
+                                <option v-for="t in values.tribes"
+                                    :value="t"
+                                    :data-tribe="t"
+                                >{{t}}</option>
+                            </select>
+                        </div>
+                        <button class="inline" @click="delMembers(member.name)">삭제</button>
                     </div>
                 </div>
             </div>
@@ -101,16 +160,46 @@
                         <button @click="copyTeamsText">베넷 채팅용 텍스트 복사</button>
                     </div>
                     <div style="margin-top: 10px">
-                        <div v-for="(team, i) in teams">
+                        <input type="checkbox" id="devideZerg" v-model="devideZerg.use">
+                        <label for="devideZerg">
+                            <span>각 팀 저그 배정. 확률 :</span>
+                            <select v-model="devideZerg.percent">
+                                <option
+                                    v-for="n in [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]"
+                                    :value="n"
+                                >{{n}}%</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: red;"
+                        v-if="!!this.lastDevideTeamsTime"
+                    >
+                        마지막 나누기 : {{lastDevideTeamsTimeStr}}
+                    </div>
+                    <div style="margin-top: 10px">
+                        <div style="margin-bottom: 6px;"
+                            v-for="(team, i) in teams"
+                        >
                             <span>{{i+1}}팀 : </span>
-                            <span>{{team.join(', ')}}</span>
+                            <span class="team-member"
+                                v-for="member in team"
+                                :data-tribe="member.tribe"
+                                @click="showChangeTeamMemberWindow({team, member}, $event)"
+                            >{{member.name}}</span>
                         </div>
                         <div style="margin-top: 20px;"
                             v-if="obsTeam.length > 0">
                             <span>옵저버({{obsTeam.length}}) : </span>
-                            <span>{{obsTeam.join(', ')}}</span>
+                            <span class="team-member"
+                                v-for="member in obsTeam"
+                                :data-tribe="member.tribe"
+                            >{{member.name}}</span>
                         </div>
                     </div>
+
+                    <dialog v-if="changeTeamMember.showWindow">
+                        
+                    </dialog>
                 </div>
             </div>
             <div class="inline-g" style="width: 350px; min-height: 150px; margin-left: 20px; margin-top: 20px;">
@@ -136,6 +225,13 @@
             el: '#main',
             data() {
                 return {
+                    values: {
+                        tribes: ['random', 'zerg', 'protoss', 'terran']
+                    },
+                    indexObj: {
+                        members: {}
+                    },
+
                     regMemberSrc: '',
                     members: [],
                     selectedMembers: [],
@@ -144,17 +240,40 @@
                     teamSize: 4,
                     teams: [],
                     obsTeam: [],
+                    lastDevideTeamsTime: null,
+                    changeTeamMember: {
+                        showWindow: false,
+                        teamNumber: null,
+                        member: null,
+                    },
+                    devideZerg: {
+                        use: false,
+                        percent: 80
+                    },
+                    
                     winningRate: {
                         src: '',
                         result: ''
-                    }
+                    },
+                    
                 }
             },
             watch: (()=>{
                 let obj = {
-                    members: function(){
-                        this.calcTeamCount();
-                        this.saveAll();
+                    // members: function(){
+                    //     this.calcTeamCount();
+                    //     this.saveAll();
+                    // },
+                    members: {
+                        deep: true,
+                        handler: function(){
+                            this.members.forEach(member => {
+                                this.indexObj.members[member.name] = member;
+                            });
+
+                            this.calcTeamCount();
+                            this.saveAll();
+                        }
                     },
                     'winningRate.src': function(){
                         this.calcWinningRate();
@@ -169,6 +288,22 @@
                 return obj;
             })(),
             computed: {
+                lastDevideTeamsTimeStr: function(){
+                    if(!this.lastDevideTeamsTime) return '';
+                    let dt = new Date(this.lastDevideTeamsTime);
+
+                    function p(s){
+                        return (s>9 ? '' : '0') + s;
+                    }
+
+                    let mm = dt.getMonth() + 1;
+                    let dd = dt.getDate();
+                    let h = dt.getHours();
+                    let m = dt.getMinutes();
+                    let s = dt.getSeconds();
+
+                    return `${p(dt.getHours())}:${p(dt.getMinutes())}:${p(dt.getSeconds())}`;
+                }
             },
             created() {
                 this.loadAll();
@@ -215,26 +350,38 @@
                     if(list.length === 0) return;
                     console.log('reg src :', list.length, list);
                     
-                    list.forEach(m => {
-                        if(this.members.includes(m)) return;
-                        console.log('add :', m);
-                        this.members.push(m);
+                    list.forEach(name => {
+                        if(this.members.find(m => m.name === name)){
+                            return;
+                        }
+
+                        console.log('add :', name);
+
+                        let bMember = this.indexObj.members[name] = this.indexObj.members[name] || {
+                            name,
+                            tribe: 'random'
+                        };
+                        this.members.push(bMember);
                     });
-                    this.members.sort();
+                    
+                    this.members.sort((a,b) => {
+                        return a.name.localeCompare(b.name);
+                    });
                 },
                 delAllMembers: function(){
-                    if(!confirm('전체삭제??? 레알???')) return;
+                    if(!confirm('전체삭제???')) return;
                     this.members = [];
                     this.selectedMembers = [];
                 },
                 delMembers: function(ms){
                     if(!ms) return;
                     if(typeof ms == 'string') ms = [ms];
-                    ms.forEach(m => {
-                        let idx = this.members.indexOf(m);
+
+                    ms.forEach(name => {
+                        let idx = this.members.findIndex(m => m.name === name);
                         if(idx > -1) this.members.splice(idx, 1);
 
-                        idx = this.selectedMembers.indexOf(m);
+                        idx = this.selectedMembers.findIndex(m => m.name === name);
                         if(idx > -1) this.selectedMembers.splice(idx, 1);
                     });
                 },
@@ -244,12 +391,55 @@
                     teamSize -= teamSize % 2;
                     this.teamSize = teamSize;
                 },
+                sortTeam: function(team){
+                    let compare = (a,b) => {
+                        return a.tribe === 'zerg' ? -1 : 0;
+                    };
+                    team.sort(compare);
+                    return team;
+                },
                 devideTeams: function(){
+                    this.lastDevideTeamsTime = Date.now();
+
                     let teams = this.teams = new Array(parseInt(this.teamSize));
                     let list = this.members.concat();
+                    // shuffle
+                    list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
+                    
+                    if(this.devideZerg.use){
+                        let zergs = (() => {
+                            let zergs = list.filter(m => m.tribe === 'zerg');
+                            
+                            while(zergs.length > teams.length){
+                                let idx = parseInt(Math.random() * zergs.length);
+                                zergs.splice(idx, 1);
+                            }
+    
+                            return zergs;
+                        })();
+
+                        let teamNums = Array.from(Array(teams.length).keys())
+                                        .map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
+
+                        for(let i=0; zergs.length>0 && i<teamNums.length; i++){
+                            if(Math.random() * 100 > this.devideZerg.percent){
+                                continue;
+                            }
+
+                            let tn = teamNums[i];
+                            let team = teams[tn] = teams[tn] || [];
+
+                            let member = zergs.pop();
+                            team.push( member );
+
+                            let idx = list.findIndex(m => m===member);
+                            list.splice(idx, 1);
+                        }
+                    }
 
                     for(let i=0; i<teams.length; i++){
                         let team = teams[i] = teams[i] || [];
+                        
                         while(list.length > 0 && team.length < this.memberCntForTeam){
                             let idx = parseInt(Math.random() * list.length);
                             team.push( list[idx] );
@@ -257,17 +447,27 @@
                         }
                     }
                     
-                    this.obsTeam = list;
+                    teams.forEach(team => this.sortTeam(team));
+                    this.obsTeam = this.sortTeam(list);
+                },
+                showChangeTeamMemberWindow: function({team, member}, e){
+                    let teams = this.teams.concat().filter(t => t !== team);
+                    let members = teams.reduce((arr, t) => {
+                        arr = arr.concat(t);
+                        return arr;
+                    }, []);
+                    members = this.obsTeam.concat(this.sortTeam(members));
+                    console.log('changeTeamMember :', members, e)
                 },
                 copyTeamsText: function(){
                     let text = [];
                     this.teams.forEach((team, i) => {
-                        let t = `${i+1}팀 : ${team.join(', ')}`;
+                        let t = `${i+1}팀 : ${team.map(t=>t.name).join(', ')}`;
                         text.push(t);
                     });
 
                     if(this.obsTeam.length > 0){
-                        text.push(`옵 : ${this.obsTeam.join(', ')}`);
+                        text.push(`옵 : ${this.obsTeam.map(t=>t.name).join(', ')}`);
                     }
 
                     let tempElem = document.createElement('textarea');
