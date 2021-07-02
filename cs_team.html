@@ -38,9 +38,13 @@
                 text-align: right;
             }
             .m-name {
-                width: calc(100% - 200px);
+                width: calc(100% - 230px);
                 padding: 2px;
                 border-radius: 2px;
+                border: 1px solid #000;
+            }
+            .m-levels {
+                vertical-align: top;
             }
             .m-tribes {
                 vertical-align: top;
@@ -51,19 +55,84 @@
                 margin: 2px 2px;
                 border-radius: 2px;
                 cursor: pointer;
+                border: 1px solid #000;
             }
-            [data-tribe] {
+            [data-level] {
                 position: relative;
                 border-radius: 2px;
             }
-            [data-tribe="zerg"] {
+            [data-level]:before {
+                /* position: absolute;
+                left: -5px;
+                top: -5px; */
+                display: inline-block;
+                border-radius: 16%;
+                width: 14px;
+                height: 14px;
+                font-size: 10px;
+                text-align: center;
+                border: 1px solid #000;
+                margin: 0px 2px;
+                vertical-align: text-bottom;
+            }
+            [data-level="R"] {
                 background-color: rgb(255 0 0 / 70%);
+            }
+            [data-level="R"]:before {
+                content: attr(data-level);
+                background-color: rgb(255 0 0 / 80%);
+            }
+            [data-level="S"] {
+                background-color: rgb(255 141 0 / 50%);
+            }
+            [data-level="S"]:before {
+                content: attr(data-level);
+                background-color: rgb(255 141 0 / 80%);
+            }
+            [data-level="A"] {
+                background-color: rgb(239 255 0 / 50%);
+            }
+            [data-level="A"]:before {
+                content: attr(data-level);
+                background-color: rgb(239 255 0 / 50%);
+            }
+            [data-level="B"] {
+                background-color: rgb(4 255 0 / 50%);
+            }
+            [data-level="B"]:before {
+                content: attr(data-level);
+                background-color: rgb(4 255 0 / 50%);
+            }
+            [data-level="C"] {
+                background-color: rgb(0 196 255 / 50%);
+            }
+            [data-level="C"]:before {
+                content: attr(data-level);
+                background-color: rgb(0 196 255 / 50%);
+            }
+            [data-level="D"] {
+                background-color: rgb(255 0 247 / 50%);
+            }
+            [data-level="D"]:before {
+                content: attr(data-level);
+                background-color: rgb(255 0 247 / 50%);
+            }
+            /* [data-tribe="zerg"] {
+                padding-right: 5px;
+            } */
+            [data-tribe="zerg"]:after {
+                content: 'Z';
+                position: absolute;
+                top: 0px;
+                right: 0px;
+                font-size: 10px;
                 color: #fff;
+                text-align: center;
+                background-color: #ff000087;
+                padding: 0px 3px;
+                border-top-right-radius: 1px;
             }
-            [data-tribe="zerg"]:before {
-                content: 'z:';
-            }
-            [data-tribe="protoss"] {
+            /* [data-tribe="protoss"] {
                 background-color: rgb(255 255 0 / 80%);
             }
             [data-tribe="protoss"]:before {
@@ -79,7 +148,7 @@
             [data-tribe="random"] {
                 background-color: rgb(0 128 0 / 70%);
                 color: #fff;
-            }
+            } */
         </style>
     </head>
     <body>
@@ -94,6 +163,7 @@
                 </div>
                 <div class="align-r" style="margin-top: 10px;">
                     <button @click="delAllMembers">전체삭제</button>
+                    <button @click="sortMembers">재정렬</button>
                     <span>전체 : {{members.length}}명</span>
                     <span>선택 : {{selectedMembers.length}}명</span>
                 </div>
@@ -111,7 +181,20 @@
                         <span class="m-no">{{i+1}}.</span>
                         <div class="m-name inline-b"
                             :data-tribe="member.tribe"
+                            :data-level="member.level"
                         >{{member.name}}</div>
+
+                        <div class="m-levels inline-b">
+                            <select
+                                v-model="member.level"
+                                :data-level="member.level"
+                            >
+                                <option v-for="level in values.levels"
+                                    :value="level.id"
+                                    :data-level="level.id"
+                                >{{level.id}}</option>
+                            </select>
+                        </div>
 
                         <div class="m-tribes inline-b">
                             <select
@@ -148,18 +231,18 @@
                     <div>
                         <span>팀 수</span>
                         <select v-model="teamSize">
-                            <option v-for="n in 10">{{n}}</option>
+                            <option v-for="n in 30">{{n}}</option>
                         </select>
                         <span>팀당 인원</span>
                         <select v-model="memberCntForTeam">
-                            <option v-for="n in 4">{{n}}</option>
+                            <option v-for="n in 20">{{n}}</option>
                         </select>
                     </div>
                     <div>
                         <button @click="devideTeams">나누기 gogo</button>
                         <button @click="copyTeamsText">베넷 채팅용 텍스트 복사</button>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 5px">
                         <input type="checkbox" id="devideZerg" v-model="devideZerg.use">
                         <label for="devideZerg">
                             <span>각 팀 저그 배정. 확률 :</span>
@@ -171,6 +254,16 @@
                             </select>
                         </label>
                     </div>
+                    <div style="margin-top: 10px">
+                        <input type="checkbox" id="devideTeamBlance" v-model="teamBalance.use">
+                        <label for="devideTeamBlance">
+                            <span>팀밸런스</span>
+                            <span
+                                v-for="(level, i) in values.levels"
+                            >{{level.id}}:{{level.point}}{{i>0 && i+1!=values.levels.length ? ', ' : ' '}}</span>
+                            <span>, S이상두명+0.5, B이하두명-1</span>
+                        </label>
+                    </div>
                     <div style="margin-top: 10px; font-size: 12px; color: red;"
                         v-if="!!this.lastDevideTeamsTime"
                     >
@@ -180,19 +273,21 @@
                         <div style="margin-bottom: 6px;"
                             v-for="(team, i) in teams"
                         >
-                            <span>{{i+1}}팀 : </span>
+                            <span>{{i+1}}팀({{ calcTeamLevelPoints(team) }}) : </span>
                             <span class="team-member"
                                 v-for="member in team"
                                 :data-tribe="member.tribe"
+                                :data-level="member.level"
                                 @click="showChangeTeamMemberWindow({team, member}, $event)"
                             >{{member.name}}</span>
                         </div>
                         <div style="margin-top: 20px;"
                             v-if="obsTeam.length > 0">
-                            <span>옵저버({{obsTeam.length}}) : </span>
+                            <span>옵저버 : </span>
                             <span class="team-member"
                                 v-for="member in obsTeam"
                                 :data-tribe="member.tribe"
+                                :data-level="member.level"
                             >{{member.name}}</span>
                         </div>
                     </div>
@@ -226,7 +321,26 @@
             data() {
                 return {
                     values: {
-                        tribes: ['random', 'zerg', 'protoss', 'terran']
+                        levels: (() => {
+                            let list = [
+                                {id: 'R', point: 5.5},
+                                {id: 'S', point: 4},
+                                {id: 'A', point: 3},
+                                {id: 'B', point: 2},
+                                {id: 'C', point: 1.5},
+                                {id: 'D', point: 1},
+                            ];
+
+                            list.pointIndex = list.reduce((data, level) => {
+                                data[level.id] = level.point;
+                                return data;
+                            },{});
+                            list.highLevels = list.slice(0, 2).map(level => level.id);
+                            list.lowLevels = list.slice(list.length-3).map(level => level.id);
+
+                            return list;
+                        })(),
+                        tribes: ['random', 'zerg', 'protoss', 'terran'],
                     },
                     indexObj: {
                         members: {}
@@ -248,7 +362,10 @@
                     },
                     devideZerg: {
                         use: false,
-                        percent: 80
+                        percent: 100
+                    },
+                    teamBalance: {
+                        use: false,
                     },
                     
                     winningRate: {
@@ -318,6 +435,15 @@
                     let obj = JSON.parse(str);
                     console.log('load data :', obj);
 
+                    // members
+                    (() => {
+                        this.defaultLevel = this.values.levels[Math.floor(this.values.levels.length/2)];
+                        obj.members && obj.members.forEach(m => {
+                            m.tribes = m.tribes || 'random';
+                            m.level = m.level || this.defaultLevel.id;
+                        });
+                    })();
+
                     try{
                         Object.assign(this, obj);
                     }catch(e){
@@ -329,7 +455,9 @@
                     clearTimeout(this._timer_savedata);
                     setTimeout(() => {
                         let obj = {};
-                        for(var k in v.$data){
+                        let except = ['values'];
+                        for(var k in this.$data){
+                            if(except.includes(k)) continue;
                             obj[k] = v.$data[k];
                         }
                         localStorage.setItem('savedata', JSON.stringify(obj));
@@ -359,12 +487,19 @@
 
                         let bMember = this.indexObj.members[name] = this.indexObj.members[name] || {
                             name,
-                            tribe: 'random'
+                            tribe: 'random',
+                            level: this.defaultLevel.id,
                         };
                         this.members.push(bMember);
                     });
-                    
+
+                    this.sortMembers();
+                },
+                sortMembers: function(){
                     this.members.sort((a,b) => {
+                        let gap = this.values.levels.pointIndex[b.level]
+                                        - this.values.levels.pointIndex[a.level];
+                        if(gap !== 0) return gap;
                         return a.name.localeCompare(b.name);
                     });
                 },
@@ -393,12 +528,22 @@
                 },
                 sortTeam: function(team){
                     let compare = (a,b) => {
-                        return a.tribe === 'zerg' ? -1 : 0;
+                        if(a.tribe === 'zerg'){
+                            if(b.tribe === 'zerg'){
+                                return this.values.levels.pointIndex[b.level]
+                                        - this.values.levels.pointIndex[a.level];
+                            }
+                            return -1;
+                        }else if(b.tribe === 'zerg'){
+                            return 1;
+                        }
+                        return this.values.levels.pointIndex[b.level]
+                                        - this.values.levels.pointIndex[a.level];
                     };
                     team.sort(compare);
                     return team;
                 },
-                devideTeams: function(){
+                devideTeams: function({deviceOnly}){
                     this.lastDevideTeamsTime = Date.now();
 
                     let teams = this.teams = new Array(parseInt(this.teamSize));
@@ -406,6 +551,7 @@
                     // shuffle
                     list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
                     
+                    // 저그 나누기
                     if(this.devideZerg.use){
                         let zergs = (() => {
                             let zergs = list.filter(m => m.tribe === 'zerg');
@@ -437,18 +583,72 @@
                         }
                     }
 
-                    for(let i=0; i<teams.length; i++){
-                        let team = teams[i] = teams[i] || [];
-                        
-                        while(list.length > 0 && team.length < this.memberCntForTeam){
-                            let idx = parseInt(Math.random() * list.length);
-                            team.push( list[idx] );
-                            list.splice(idx, 1);
+                    // 팀 나누기
+                    let setTeams = () => {
+                        if(list.length == 0) return;
+                        let chk = false;
+                        for(let i=0; i<teams.length; i++){
+                            let team = teams[i] = teams[i] || [];
+                            
+                            if(list.length > 0 && team.length < this.memberCntForTeam){
+                                chk = true;
+                                let idx = parseInt(Math.random() * list.length);
+                                team.push( list[idx] );
+                                list.splice(idx, 1);
+                            }
                         }
+                        if(!chk) return;
+                        setTeams();
+                    }
+                    setTeams();
+
+                    if(!deviceOnly && this.teamBalance.use){
+                        let getGap = (ts) => {
+                            // let sum = ts.reduce((sum, team) => {
+                            //     team.points = this.calcTeamLevelPoints(team);
+                            //     sum += team.points;
+                            //     return sum;
+                            // }, 0);
+                            // ts.avg = sum / ts.length;
+                            // ts.forEach(team => {
+                            //     let gap = team.points - ts.avg;
+                            //     ts.gap = Math.max(ts.gap || 0, gap);
+                            // });
+                            let list = ts.map(t => this.calcTeamLevelPoints(t));
+                            ts.gap = Math.max.apply(null, list) - Math.min.apply(null, list);
+                            return ts.gap;
+                        };
+
+                        // let list = [teams.concat()];
+                        // let balanceCreateSize = Math.max(10, teams.length * 10);
+                        // for(let i=0; i<balanceCreateSize; i++){
+                        //     let ts = this.devideTeams({deviceOnly: true}).concat();
+                        //     getGap(ts);
+                        //     list.push(ts)
+                        // }
+                        // list.sort((a,b) => a.gap - b.gap);
+                        // teams = this.teams = list[0];
+                        let ts = teams;
+                        let tempTs = ts;
+                        let loop = 0, loopLimit = 20000;
+                        while(getGap(ts) >= 1){
+                            if(loop++ >= loopLimit){
+                                console.warn('devide team - balance loop break :', loopLimit);
+                                ts = tempTs;
+                                break;
+                            }
+                            if(ts.gap < tempTs.gap){
+                                tempTs = ts;
+                            }
+                            ts = this.devideTeams({deviceOnly: true}).concat();
+                        }
+                        console.log('devide team - loop count :', loop-1, new Date());
+                        teams = this.teams = ts;
                     }
                     
                     teams.forEach(team => this.sortTeam(team));
                     this.obsTeam = this.sortTeam(list);
+                    return teams;
                 },
                 showChangeTeamMemberWindow: function({team, member}, e){
                     let teams = this.teams.concat().filter(t => t !== team);
@@ -477,6 +677,34 @@
                     tempElem.select();
                     document.execCommand("copy");
                     document.body.removeChild(tempElem);
+                },
+                getMemberPoints: function(member){
+                    let point = this.values.levels.pointIndex[member.level] || 0;
+                    // if(member.tribe === 'zerg'){
+                    //     point += 0.5;
+                    // }
+                    return point;
+                },
+                calcTeamLevelPoints: function(team){
+                    let highLevelCnt = 0, lowLevelCnt = 0;
+                    let points = team.reduce((sum, member) => {
+                        if(this.values.levels.lowLevels.includes(member.level)){
+                            lowLevelCnt++;
+                        }else if(this.values.levels.highLevels.includes(member.level)){
+                            highLevelCnt++;
+                        }
+
+                        let point = this.getMemberPoints(member);
+                        return sum + point;
+                    }, 0);
+
+                    if(lowLevelCnt >= 2){
+                        points -= 1;
+                    }
+                    if(highLevelCnt >= 2){
+                        points += 0.5;
+                    }
+                    return points;
                 },
                 calcWinningRate: function(){
                     let rateList = [];
