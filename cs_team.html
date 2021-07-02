@@ -261,7 +261,7 @@
                             <span
                                 v-for="(level, i) in values.levels"
                             >{{level.id}}:{{level.point}}{{i>0 && i+1!=values.levels.length ? ', ' : ' '}}</span>
-                            <span>, S이상두명+0.5, B이하두명-1</span>
+                            <span>, S이상두명{{values.levels.highLevelsHandicap}}, B이하두명{{values.levels.lowLevelsHandicap}}</span>
                         </label>
                     </div>
                     <div style="margin-top: 10px; font-size: 12px; color: red;"
@@ -322,21 +322,37 @@
                 return {
                     values: {
                         levels: (() => {
+                            // let list = [
+                            //     {id: 'R', point: 5.5},
+                            //     {id: 'S', point: 4},
+                            //     {id: 'A', point: 3},
+                            //     {id: 'B', point: 2},
+                            //     {id: 'C', point: 1.5},
+                            //     {id: 'D', point: 1},
+                            // ];
+                            // list.lowLevelsHandicap = -1;
+                            // list.highLevelsHandicap = 1;
+
                             let list = [
-                                {id: 'R', point: 5.5},
-                                {id: 'S', point: 4},
-                                {id: 'A', point: 3},
-                                {id: 'B', point: 2},
-                                {id: 'C', point: 1.5},
-                                {id: 'D', point: 1},
+                                {id: 'R', point: 10},
+                                {id: 'S', point: 8},
+                                {id: 'A', point: 7},
+                                {id: 'B', point: 6},
+                                {id: 'C', point: 4},
+                                {id: 'D', point: 3},
                             ];
+                            list.lowLevelsHandicap = -2;
+                            list.highLevelsHandicap = 1;
+
+
+                            list.lowLevels = list.slice(list.length-3).map(level => level.id);
+                            list.highLevels = list.slice(0, 2).map(level => level.id);
 
                             list.pointIndex = list.reduce((data, level) => {
                                 data[level.id] = level.point;
                                 return data;
                             },{});
-                            list.highLevels = list.slice(0, 2).map(level => level.id);
-                            list.lowLevels = list.slice(list.length-3).map(level => level.id);
+                            
 
                             return list;
                         })(),
@@ -699,10 +715,10 @@
                     }, 0);
 
                     if(lowLevelCnt >= 2){
-                        points -= 1;
+                        points += this.values.levels.lowLevelsHandicap;
                     }
                     if(highLevelCnt >= 2){
-                        points += 0.5;
+                        points += this.values.levels.highLevelsHandicap;
                     }
                     return points;
                 },
