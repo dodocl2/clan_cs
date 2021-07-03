@@ -224,10 +224,10 @@ export default {
             team.sort(compare);
             return team;
         },
-        devideTeams: function({deviceOnly}){
+        devideTeams: function({devideOnly}){
             this.lastDevideTeamsTime = Date.now();
 
-            let teams = this.teams = new Array(parseInt(this.teamSize));
+            let teams = new Array(parseInt(this.teamSize));
             let list = this.members.concat();
             // shuffle
             list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
@@ -283,7 +283,7 @@ export default {
             }
             setTeams();
 
-            if(!deviceOnly && this.teamBalance.use){
+            if(!devideOnly && this.teamBalance.use){
                 let getGap = (ts) => {
                     // let sum = ts.reduce((sum, team) => {
                     //     team.points = this.calcTeamLevelPoints(team);
@@ -303,7 +303,7 @@ export default {
                 // let list = [teams.concat()];
                 // let balanceCreateSize = Math.max(10, teams.length * 10);
                 // for(let i=0; i<balanceCreateSize; i++){
-                //     let ts = this.devideTeams({deviceOnly: true}).concat();
+                //     let ts = this.devideTeams({devideOnly: true}).concat();
                 //     getGap(ts);
                 //     list.push(ts)
                 // }
@@ -321,15 +321,22 @@ export default {
                     if(ts.gap < tempTs.gap){
                         tempTs = ts;
                     }
-                    ts = this.devideTeams({deviceOnly: true}).concat();
+                    let dt = this.devideTeams({devideOnly: true});
+                    ts = dt.teams;
+                    list = dt.obsTeam;
                 }
                 console.log('devide team - loop count :', loop-1, new Date());
-                teams = this.teams = ts;
+                teams = ts;
             }
             
             teams.forEach(team => this.sortTeam(team));
-            this.obsTeam = this.sortTeam(list);
-            return teams;
+            let obsTeam = this.sortTeam(list);
+            
+            if(!devideOnly){
+                this.teams = teams;
+                this.obsTeam = obsTeam;
+            }
+            return {teams, obsTeam};
         },
         showChangeTeamMemberWindow: function({team, member}, e){
             let teams = this.teams.concat().filter(t => t !== team);
