@@ -310,16 +310,18 @@ export default {
                 // list.sort((a,b) => a.gap - b.gap);
                 // teams = this.teams = list[0];
                 let ts = teams;
-                let tempTs = ts;
+                let tempTs = ts, tempObs = list;
                 let loop = 0, loopLimit = 20000;
                 while(getGap(ts) >= 1){
                     if(loop++ >= loopLimit){
                         console.warn('devide team - balance loop break :', loopLimit);
                         ts = tempTs;
+                        list = tempObs;
                         break;
                     }
                     if(ts.gap < tempTs.gap){
                         tempTs = ts;
+                        tempObs = list;
                     }
                     let dt = this.devideTeams({devideOnly: true});
                     ts = dt.teams;
