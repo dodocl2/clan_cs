@@ -1,0 +1,184 @@
+html, body {
+    font-size: 14px;
+}
+
+div {
+    box-sizing: border-box;
+}
+
+.bd01 {
+    border: 1px solid #000;
+    padding: 4px;
+}
+.inline-b {
+    display: inline-block;
+}
+.inline {
+    display: inline;
+}
+.inline-g {
+    display: inline-grid;
+    vertical-align: top;
+    margin-bottom: 20px;
+}
+.align-r {
+    text-align: right;
+}
+.bg1 {
+    background-color: #f0f0f0;
+}
+.member {
+    padding: 2px 2px;
+}
+.member:hover {
+    background-color: rgb(178, 220, 240);
+}
+.m-no {
+    display: inline-block;
+    width: 17px;
+    text-align: right;
+}
+.reg-member-list .m-name {
+    width: calc(100% - 230px);
+}
+.m-name {
+    padding: 3px 2px 3px 12px;
+    border-radius: 2px;
+    border: 1px solid #000;
+}
+.m-levels {
+    vertical-align: top;
+}
+.m-tribes {
+    vertical-align: top;
+}
+
+.team-member {
+    padding: 2px 2px;
+    margin: 2px 2px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid #000;
+}
+[data-level] {
+    position: relative;
+    border-radius: 2px;
+}
+/*
+[data-level]:before {
+    display: inline-block;
+    border-radius: 16%;
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+    text-align: center;
+    border: 1px solid #000;
+    margin: 0px 2px;
+    vertical-align: text-bottom;
+}
+*/
+[data-level="R"] {
+    background-color: rgb(255 0 0 / 70%);
+}
+/* [data-level="R"]:before {
+    content: attr(data-level);
+    background-color: rgb(255 0 0 / 80%);
+} */
+[data-level="S"] {
+    background-color: rgb(255 141 0 / 50%);
+}
+/* [data-level="S"]:before {
+    content: attr(data-level);
+    background-color: rgb(255 141 0 / 80%);
+} */
+[data-level="A"] {
+    background-color: rgb(239 255 0 / 50%);
+}
+/* [data-level="A"]:before {
+    content: attr(data-level);
+    background-color: rgb(239 255 0 / 50%);
+} */
+[data-level="B"] {
+    background-color: rgb(4 255 0 / 50%);
+}
+/* [data-level="B"]:before {
+    content: attr(data-level);
+    background-color: rgb(4 255 0 / 50%);
+} */
+[data-level="C"] {
+    background-color: rgb(0 196 255 / 50%);
+}
+/* [data-level="C"]:before {
+    content: attr(data-level);
+    background-color: rgb(0 196 255 / 50%);
+} */
+[data-level="D"] {
+    background-color: rgb(255 0 247 / 50%);
+}
+/* [data-level="D"]:before {
+    content: attr(data-level);
+    background-color: rgb(255 0 247 / 50%);
+} */
+
+/* [data-tribe="zerg"] {
+    padding-right: 5px;
+} */
+/* [data-tribe="zerg"]:after {
+    content: 'Z';
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    font-size: 10px;
+    color: #fff;
+    text-align: center;
+    background-color: #ff000087;
+    padding: 0px 3px;
+    border-top-right-radius: 1px;
+} */
+/* [data-tribe="protoss"] {
+    background-color: rgb(255 255 0 / 80%);
+}
+[data-tribe="protoss"]:before {
+    content: 'p:';
+}
+[data-tribe="terran"] {
+    background-color: rgb(0 0 255 / 70%);
+    color: #fff;
+}
+[data-tribe="terran"]:before {
+    content: 't:';
+}
+[data-tribe="random"] {
+    background-color: rgb(0 128 0 / 70%);
+    color: #fff;
+} */
+
+
+
+
+
+
+.member-attrs {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 20%;
+}
+.member-attr-box {
+    display: block;
+    border-radius: 16%;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid #000;
+    width: 10px;
+    height: 12px;
+    /* vertical-align: top; */
+}
+.member-attr-box[data-tribe="zerg"] {
+    background-color: #ff000087;
+}
+
+.team-setting-members .m-name {
+    margin: 1px 2px;
+}
