@@ -14,7 +14,7 @@ export default {
         :values="values"
         :defaultLevel="defaultLevel"
     />
-    <div class="inline-g" style="width: 350px; min-height: 200px; margin-left: 20px;">
+    <div class="inline-g" style="width: 400px; min-height: 200px; margin-left: 20px;">
         <div class="bd01" style="width: 100%;">
             <div>
                 <span>팀 수</span>
@@ -30,7 +30,7 @@ export default {
                 <button @click="devideTeams">나누기 gogo</button>
                 <button @click="copyTeamsText">베넷 채팅용 텍스트 복사</button>
             </div>
-            <div style="margin-top: 5px">
+            <div style="margin-top: 5px; font-size: 12px;">
                 <input type="checkbox" id="devideZerg" v-model="devideZerg.use">
                 <label for="devideZerg">
                     <span>각 팀 저그 배정. 확률 :</span>
@@ -42,14 +42,14 @@ export default {
                     </select>
                 </label>
             </div>
-            <div style="margin-top: 10px">
+            <div style="margin-top: 0px; font-size: 12px;">
                 <input type="checkbox" id="devideTeamBlance" v-model="teamBalance.use">
                 <label for="devideTeamBlance">
                     <span>팀밸런스</span>
                     <span
                         v-for="(level, i) in values.levels"
                     >{{level.id}}:{{level.point}}{{i>0 && i+1!=values.levels.length ? ', ' : ' '}}</span>
-                    <span>, S이상두명{{values.levels.highLevelsHandicap}}, B이하두명{{values.levels.lowLevelsHandicap}}</span>
+                    <span>, S이상두명+{{values.levels.highLevelsHandicap}}, B이하두명{{values.levels.lowLevelsHandicap}}</span>
                 </label>
             </div>
             <div style="margin-top: 10px; font-size: 12px; color: red;"
@@ -77,6 +77,7 @@ export default {
                         :key="member.name"
                         :member="member"
                     />
+                    <div style="font-size: 12px;">다음 나누기에 {{obs_exceptNextTurnPercent}}% 확률로 옵에서 제외</div>
                 </div>
             </div>
 
@@ -110,6 +111,7 @@ export default {
     },
     data() {
         let data = Data;
+        window._data = data;
         return data;
     },
     watch: (()=>{
@@ -225,12 +227,35 @@ export default {
             return team;
         },
         devideTeams: function({devideOnly}){
+            let renew = false;
+            if(Date.now() - this.lastDevideTeamsTime || 0 > 60000*60){
+                renew = true;
+            }
             this.lastDevideTeamsTime = Date.now();
 
             let teams = new Array(parseInt(this.teamSize));
+            let obsMemberCount = this.members.length - (teams.length * this.memberCntForTeam);
+            let obsTeam;
             let list = this.members.concat();
             // shuffle
             list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
+
+            // 옵저버 미리 생성
+            if(obsMemberCount > 0){
+                obsTeam = list.splice(0, obsMemberCount);
+                if(!renew && this.obsTeam){
+                    obsTeam.forEach((obs, i) => {
+                        let prevObs = this.obsTeam.find(prev => prev.name == obs.name);
+                        if(!prevObs) return;
+                        if(Math.random() * 100 > this.obs_exceptNextTurnPercent){
+                            return;
+                        }
+                        obsTeam.splice(i, 1);
+                        obsTeam.push(list.shift());
+                        list.push(obs);
+                    })
+                }
+            }
             
             // 저그 나누기
             if(this.devideZerg.use){
@@ -283,56 +308,59 @@ export default {
             }
             setTeams();
 
-            if(!devideOnly && this.teamBalance.use){
+            // 팀 밸런스
+            (() => {
+                if(devideOnly || !this.teamBalance.use){
+                    return;
+                }
+
                 let getGap = (ts) => {
-                    // let sum = ts.reduce((sum, team) => {
-                    //     team.points = this.calcTeamLevelPoints(team);
-                    //     sum += team.points;
-                    //     return sum;
-                    // }, 0);
-                    // ts.avg = sum / ts.length;
-                    // ts.forEach(team => {
-                    //     let gap = team.points - ts.avg;
-                    //     ts.gap = Math.max(ts.gap || 0, gap);
-                    // });
                     let list = ts.map(t => this.calcTeamLevelPoints(t));
                     ts.gap = Math.max.apply(null, list) - Math.min.apply(null, list);
                     return ts.gap;
                 };
 
-                // let list = [teams.concat()];
-                // let balanceCreateSize = Math.max(10, teams.length * 10);
-                // for(let i=0; i<balanceCreateSize; i++){
-                //     let ts = this.devideTeams({devideOnly: true}).concat();
-                //     getGap(ts);
-                //     list.push(ts)
-                // }
-                // list.sort((a,b) => a.gap - b.gap);
-                // teams = this.teams = list[0];
-                let ts = teams;
-                let tempTs = ts, tempObs = list;
-                let loop = 0, loopLimit = 20000;
-                while(getGap(ts) >= 1){
-                    if(loop++ >= loopLimit){
-                        console.warn('devide team - balance loop break :', loopLimit);
-                        ts = tempTs;
-                        list = tempObs;
+                let ts, tObs, gap;
+                let minObj;
+                let target_teams = [];
+                let loop = 0, loopMin = 3000, loopMax = 20000;
+
+                do{
+                    if(!ts){
+                        ts = teams;
+                        tObs = obsTeam;
+                    }else{
+                        let dt = this.devideTeams({devideOnly: true});
+                        ts = dt.teams;
+                        tObs = dt.obsTeam;
+                    }
+
+                    gap = getGap(ts);
+                    if(gap <= 1){
+                        target_teams.push({ts, tObs, gap});
+                    }else if(!minObj || gap < minObj.gap){
+                        minObj = {ts, tObs, gap};
+                    }
+
+                    loop++;
+                    if(loop >= loopMax){
+                        console.warn('devide team - balance max loop break :', loopMax);
+                        target_teams.push(minObj);
                         break;
                     }
-                    if(ts.gap < tempTs.gap){
-                        tempTs = ts;
-                        tempObs = list;
-                    }
-                    let dt = this.devideTeams({devideOnly: true});
-                    ts = dt.teams;
-                    list = dt.obsTeam;
-                }
-                console.log('devide team - loop count :', loop-1, new Date());
-                teams = ts;
-            }
+                }while(loop < loopMin || target_teams.length===0);
+
+                let selected = target_teams[ parseInt(Math.random() * target_teams.length) ];
+                teams = selected.ts;
+                obsTeam = selected.tObs;
+                
+                console.log('devide team - loop[%d], gap[%d], target :',
+                    loop, selected.gap,
+                    target_teams.length, target_teams);
+            })();
             
             teams.forEach(team => this.sortTeam(team));
-            let obsTeam = this.sortTeam(list);
+            obsTeam = this.sortTeam(obsTeam);
             
             if(!devideOnly){
                 this.teams = teams;

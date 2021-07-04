@@ -78,7 +78,7 @@ div {
 }
 */
 [data-level="R"] {
-    background-color: rgb(255 0 0 / 70%);
+    background-color: rgb(255 17 17 / 70%);
 }
 /* [data-level="R"]:before {
     content: attr(data-level);

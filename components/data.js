@@ -51,6 +51,7 @@ const DATA = (() => {
         teamSize: 4,
         teams: [],
         obsTeam: [],
+        obs_exceptNextTurnPercent: 90,
         lastDevideTeamsTime: null,
         changeTeamMember: {
             showWindow: false,
