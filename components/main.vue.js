@@ -235,7 +235,7 @@ export default {
 
             let teams = new Array(parseInt(this.teamSize));
             let obsMemberCount = this.members.length - (teams.length * this.memberCntForTeam);
-            let obsTeam;
+            let obsTeam = [];
             let list = this.members.concat();
             // shuffle
             list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
