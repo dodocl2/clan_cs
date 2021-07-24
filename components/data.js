@@ -64,6 +64,7 @@ const DATA = (() => {
         },
         teamBalance: {
             use: false,
+            maxGap: 1
         },
         
         winningRate: {
