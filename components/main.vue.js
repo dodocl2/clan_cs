@@ -50,6 +50,15 @@ export default {
                         v-for="(level, i) in values.levels"
                     >{{level.id}}:{{level.point}}{{i>0 && i+1!=values.levels.length ? ', ' : ' '}}</span>
                     <span>, S이상두명+{{values.levels.highLevelsHandicap}}, B이하두명{{values.levels.lowLevelsHandicap}}</span>
+                    <div style="margin-left: 24px;">
+                        <span>최대격차</span>
+                        <select v-model="teamBalance.maxGap">
+                            <option
+                                v-for="n in [1,2,3,4,5,6,7,8,9,10]"
+                                :value="n"
+                            >{{n}}</option>
+                        </select>
+                    </div>
                 </label>
             </div>
             <div style="margin-top: 10px; font-size: 12px; color: red;"
@@ -184,7 +193,8 @@ export default {
             })();
 
             try{
-                Object.assign(this, obj);
+                // Object.assign(this, obj);
+                _.mergeWith(this, obj);
             }catch(e){
                 console.error('load data error');
                 localStorage.removeItem('savedata');
@@ -336,7 +346,7 @@ export default {
                     }
 
                     gap = getGap(ts);
-                    if(gap <= 1){
+                    if(gap <= (this.teamBalance.maxGap || 1)){
                         target_teams.push({ts, tObs, gap});
                     }else if(!minObj || gap < minObj.gap){
                         minObj = {ts, tObs, gap};
