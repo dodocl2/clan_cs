@@ -1,19 +1,11 @@
 const DATA = (() => {
     let data = {
+        version: '1.0.0.3',
+        removeOldVersionData: true,
         values: {
             levels: (() => {
-                // let list = [
-                //     {id: 'R', point: 5.5},
-                //     {id: 'S', point: 4},
-                //     {id: 'A', point: 3},
-                //     {id: 'B', point: 2},
-                //     {id: 'C', point: 1.5},
-                //     {id: 'D', point: 1},
-                // ];
-                // list.lowLevelsHandicap = -1;
-                // list.highLevelsHandicap = 1;
-
-                let list = [
+                const levels = {};
+                let list = levels.list = [
                     {id: 'R', point: 10},
                     {id: 'S', point: 8},
                     {id: 'A', point: 7},
@@ -21,20 +13,14 @@ const DATA = (() => {
                     {id: 'C', point: 4},
                     {id: 'D', point: 3},
                 ];
-                list.lowLevelsHandicap = -2;
-                list.highLevelsHandicap = 1;
+                levels.lowLevelsHandicap = -2;
+                levels.highLevelsHandicap = 2;
 
 
-                list.lowLevels = list.slice(list.length-3).map(level => level.id);
-                list.highLevels = list.slice(0, 2).map(level => level.id);
+                levels.lowLevels = list.slice(list.length-3).map(level => level.id);
+                levels.highLevels = list.slice(0, 2).map(level => level.id);
 
-                list.pointIndex = list.reduce((data, level) => {
-                    data[level.id] = level.point;
-                    return data;
-                },{});
-                
-
-                return list;
+                return levels;
             })(),
             tribes: ['random', 'zerg', 'protoss', 'terran'],
         },
@@ -74,7 +60,7 @@ const DATA = (() => {
         
     }
 
-    data.defaultLevel = data.values.levels[Math.floor(data.values.levels.length/2)];
+    data.defaultLevel = data.values.levels.list[Math.floor(data.values.levels.list.length/2)];
 
     return data;
 })();

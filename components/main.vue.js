@@ -14,7 +14,7 @@ export default {
         :values="values"
         :defaultLevel="defaultLevel"
     />
-    <div class="inline-g" style="width: 400px; min-height: 200px; margin-left: 20px;">
+    <div class="inline-g" style="width: 400px; min-height: 200px;">
         <div class="bd01" style="width: 100%;">
             <div>
                 <span>팀 수</span>
@@ -46,13 +46,35 @@ export default {
                 <input type="checkbox" id="devideTeamBlance" v-model="teamBalance.use">
                 <label for="devideTeamBlance">
                     <span>팀밸런스</span>
-                    <span
-                        v-for="(level, i) in values.levels"
-                    >{{level.id}}:{{level.point}}{{i>0 && i+1!=values.levels.length ? ', ' : ' '}}</span>
-                    <span>, S이상두명+{{values.levels.highLevelsHandicap}}, B이하두명{{values.levels.lowLevelsHandicap}}</span>
+                    <div style="display: inline-block; margin-right: 2px;"
+                        v-for="(level, i) in values.levels.list"
+                    >
+                        <span>{{level.id}}:</span>
+                        <select class="simple" v-model="level.point">
+                            <option
+                                v-for="n in [1,2,3,4,5,6,7,8,9,10]"
+                                :value="n"
+                            >{{n}}</option>
+                        </select>
+                        <span>{{i+1!=values.levels.list.length ? ', ' : ' '}}</span>
+                    </div>
                     <div style="margin-left: 24px;">
+                        <span>S이상두명+</span>
+                        <select class="simple" v-model="values.levels.highLevelsHandicap">
+                            <option
+                                v-for="n in [1,2,3,4,5,6,7,8,9,10]"
+                                :value="n"
+                            >{{n}}</option>
+                        </select>
+                        <span>, B이하두명</span>
+                        <select class="simple" v-model="values.levels.lowLevelsHandicap">
+                            <option
+                                v-for="n in [-1,-2,-3,-4,-5,-6,-7,-8,-9,-10]"
+                                :value="n"
+                            >{{n}}</option>
+                        </select>
                         <span>최대격차</span>
-                        <select v-model="teamBalance.maxGap">
+                        <select class="simple" v-model="teamBalance.maxGap">
                             <option
                                 v-for="n in [1,2,3,4,5,6,7,8,9,10]"
                                 :value="n"
@@ -70,7 +92,7 @@ export default {
                 <div style="margin-bottom: 6px;"
                     v-for="(team, i) in teams"
                 >
-                    <span>{{i+1}}팀({{ calcTeamLevelPoints(team) }}) : </span>
+                    <span>{{i+1}}팀({{ team.points===undefined ? calcTeamLevelPoints(team) : team.points }}) : </span>
                     <member-name-box
                         v-for="member in team"
                         :key="member.name"
@@ -140,6 +162,21 @@ export default {
                     this.saveAll();
                 }
             },
+            'values.levels': {
+                deep: true,
+                handler: function(){
+                    if(!this._created) return;
+
+                    this.createLevelsIndex();
+                    this.teams.forEach((team, i) => {
+                        let old = team.points;
+                        let points = this.calcTeamLevelPoints(team);
+                        if(old !== points){
+                            this.teams.splice(i, 1, team.concat());
+                        }
+                    });
+                }
+            },
             'winningRate.src': function(){
                 this.calcWinningRate();
                 this.saveAll();
@@ -171,16 +208,55 @@ export default {
         }
     },
     created() {
-        this.loadAll();
+        // compare version
+        (() => {
+            if(!this.removeOldVersionData) return;
+
+            let data = this.getSavedData();
+            if(!data) return;
+            if(data.version === this.version){
+                return;
+            }
+            
+            let oldVerArr = data.version.split('.');
+            let verArr = this.version.split('.');
+            let remove = false;
+            if(oldVerArr.length === verArr.length){
+                for(let i=0; i<oldVerArr.length; i++){
+                    if(parseInt(oldVerArr[i]) < parseInt(verArr[i])){
+                        remove = true;
+                        break;
+                    }
+                }
+            }else{
+                remove = true;
+            }
+            
+            if(remove){
+                console.log('remove save data :', data.version, this.version);
+                localStorage.removeItem('savedata');
+            }
+        })();
+
+        this.createLevelsIndex();
+
+        try{
+            this.loadAll();
+        }catch(e){
+            console.error('load data error', e);
+        }
+
+        this.$nextTick(() => {
+            this._created = true;
+        });
     },
     mounted() {
         this.$el.style.display = '';
     },
     methods: {
         loadAll: function(){
-            let str = localStorage.getItem('savedata');
-            if(!str) return;
-            let obj = JSON.parse(str);
+            let obj = this.getSavedData();
+            if(!obj) return;
             console.log('load data :', obj);
 
             // members
@@ -195,16 +271,34 @@ export default {
             try{
                 // Object.assign(this, obj);
                 _.mergeWith(this, obj);
+                for(let key in obj){
+                    let value = this[key];
+                    if(value === undefined || value === null) continue;
+                    if(typeof value !== 'object') continue;
+                    value = _.mergeWith(Array.isArray(value) ? [] : {}, value, obj[key]);
+
+                    this.$set(this, key, value);
+                }
             }catch(e){
-                console.error('load data error');
+                console.error('load data error', e);
                 localStorage.removeItem('savedata');
+            }
+        },
+        getSavedData: function(){
+            try{
+                let str = localStorage.getItem('savedata');
+                if(!str) return;
+                let obj = JSON.parse(str);
+                return obj;
+            }catch(e){
+                return null;
             }
         },
         saveAll: function(){
             clearTimeout(this._timer_savedata);
             setTimeout(() => {
                 let obj = {};
-                let except = ['values'];
+                let except = [];//['values'];
                 for(var k in this.$data){
                     if(except.includes(k)) continue;
                     obj[k] = this.$data[k];
@@ -223,22 +317,22 @@ export default {
             let compare = (a,b) => {
                 if(a.tribe === 'zerg'){
                     if(b.tribe === 'zerg'){
-                        return this.values.levels.pointIndex[b.level]
-                                - this.values.levels.pointIndex[a.level];
+                        return this.values.levelPointIndex[b.level]
+                                - this.values.levelPointIndex[a.level];
                     }
                     return -1;
                 }else if(b.tribe === 'zerg'){
                     return 1;
                 }
-                return this.values.levels.pointIndex[b.level]
-                                - this.values.levels.pointIndex[a.level];
+                return this.values.levelPointIndex[b.level]
+                                - this.values.levelPointIndex[a.level];
             };
             team.sort(compare);
             return team;
         },
         devideTeams: function({devideOnly}){
             let renew = false;
-            if(Date.now() - this.lastDevideTeamsTime || 0 > 60000*60){
+            if(Date.now() - this.lastDevideTeamsTime || 0 > 60000*5){
                 renew = true;
             }
             this.lastDevideTeamsTime = Date.now();
@@ -390,7 +484,7 @@ export default {
         copyTeamsText: function(){
             let text = [];
             this.teams.forEach((team, i) => {
-                let t = `${i+1}팀 : ${team.map(t=>t.name).join(', ')}`;
+                let t = `${i+1}팀${team.points !== undefined ? '('+team.points+')' : ''}: ${team.map(t=>t.name).join(', ')}`;
                 text.push(t);
             });
 
@@ -406,8 +500,14 @@ export default {
             document.execCommand("copy");
             document.body.removeChild(tempElem);
         },
+        createLevelsIndex: function(){
+            this.values.levelPointIndex = this.values.levels.list.reduce((data, level) => {
+                data[level.id] = parseFloat(level.point);
+                return data;
+            },{});
+        },
         getMemberPoints: function(member){
-            let point = this.values.levels.pointIndex[member.level] || 0;
+            let point = this.values.levelPointIndex[member.level] || 0;
             // if(member.tribe === 'zerg'){
             //     point += 0.5;
             // }
@@ -432,6 +532,8 @@ export default {
             if(highLevelCnt >= 2){
                 points += this.values.levels.highLevelsHandicap;
             }
+
+            team.points = points;
             return points;
         },
         calcWinningRate: function(){
