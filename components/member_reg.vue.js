@@ -3,7 +3,7 @@ import MemberNameBox from './member_name_box.vue.js'
 
 export default {
     template: `
-    <div class="inline-g" style="float: left; width: 350px; ">
+    <div class="inline-g" style="float: left; width: 350px; margin-right: 20px;">
         <div class="bd01 inline-b" style="width: 100%;">
             <textarea style="width: 95%; height: 50px;"
                 v-model="regMemberSrc"
@@ -44,7 +44,7 @@ export default {
                         v-model="member.level"
                         :data-level="member.level"
                     >
-                        <option v-for="level in values.levels"
+                        <option v-for="level in values.levels.list"
                             :value="level.id"
                             :data-level="level.id"
                         >{{level.id}}</option>
@@ -52,7 +52,7 @@ export default {
                 </div>
 
                 <div class="m-tribes inline-b">
-                    <select
+                    <select class="simple"
                         v-model="member.tribe"
                         :data-tribe="member.tribe"
                     >
@@ -146,8 +146,8 @@ export default {
         },
         sortMembers: function(){
             this.members.sort((a,b) => {
-                let gap = this.values.levels.pointIndex[b.level]
-                                - this.values.levels.pointIndex[a.level];
+                let gap = this.values.levelPointIndex[b.level]
+                                - this.values.levelPointIndex[a.level];
                 if(gap !== 0) return gap;
                 return a.name.localeCompare(b.name);
             });
