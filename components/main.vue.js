@@ -183,9 +183,14 @@ export default {
             let obj = JSON.parse(str);
             console.log('load data :', obj);
 
+            ['teams', 'obsTeam'].forEach(name => {
+                if(obj[name].findIndex(t => t == null) > -1){
+                    delete obj[name];
+                }
+            });
+
             // members
             (() => {
-                
                 obj.members && obj.members.forEach(m => {
                     m.tribe = m.tribe || 'random';
                     m.level = m.level || this.defaultLevel.id;
@@ -237,6 +242,10 @@ export default {
             return team;
         },
         devideTeams: function({devideOnly}){
+            if(this.members.length === 0){
+                return {teams: [], obsTeam: []};
+            }
+
             let renew = false;
             if(Date.now() - this.lastDevideTeamsTime || 0 > 60000*60){
                 renew = true;
@@ -247,6 +256,7 @@ export default {
             let obsMemberCount = this.members.length - (teams.length * this.memberCntForTeam);
             let obsTeam = [];
             let list = this.members.concat();
+
             // shuffle
             list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
 
