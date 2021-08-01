@@ -222,7 +222,7 @@ export default {
                 return;
             }
             
-            let oldVerArr = data.version.split('.');
+            let oldVerArr = data.version ? data.version.split('.') : [];
             let verArr = this.version.split('.');
             let remove = false;
             if(oldVerArr.length === verArr.length){
