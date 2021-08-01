@@ -49,14 +49,13 @@ export default {
                     <div style="display: inline-block; margin-right: 2px;"
                         v-for="(level, i) in values.levels.list"
                     >
-                        <span>{{level.id}}:</span>
-                        <select class="simple" v-model="level.point">
+                        <span>{{level.id}}:</span><select class="simple" v-model="level.point">
                             <option
-                                v-for="n in [1,2,3,4,5,6,7,8,9,10]"
+                                v-for="n in [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2, 1]"
                                 :value="n"
                             >{{n}}</option>
-                        </select>
-                        <span>{{i+1!=values.levels.list.length ? ', ' : ' '}}</span>
+                        </select>&nbsp;
+                        <!-- <span>{{i+1!=values.levels.list.length ? ', ' : ' '}}</span> -->
                     </div>
                     <div style="margin-left: 24px;">
                         <span>S이상두명+</span>
@@ -66,7 +65,7 @@ export default {
                                 :value="n"
                             >{{n}}</option>
                         </select>
-                        <span>, B이하두명</span>
+                        <span>B이하두명</span>
                         <select class="simple" v-model="values.levels.lowLevelsHandicap">
                             <option
                                 v-for="n in [-1,-2,-3,-4,-5,-6,-7,-8,-9,-10]"
@@ -108,7 +107,12 @@ export default {
                         :key="member.name"
                         :member="member"
                     />
-                    <div style="font-size: 12px;">다음 나누기에 {{obs_exceptNextTurnPercent}}% 확률로 옵에서 제외</div>
+                    <div style="font-size: 12px;">
+                        <label>
+                            <input type="checkbox" v-model="obs_exceptNextTurn">
+                            <span>다음 나누기에 {{obs_exceptNextTurnPercent}}% 확률로 옵에서 제외</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -347,7 +351,7 @@ export default {
             // 옵저버 미리 생성
             if(obsMemberCount > 0){
                 obsTeam = list.splice(0, obsMemberCount);
-                if(!renew && this.obsTeam){
+                if(this.obs_exceptNextTurn && !renew && this.obsTeam){
                     obsTeam.forEach((obs, i) => {
                         let prevObs = this.obsTeam.find(prev => prev.name == obs.name);
                         if(!prevObs) return;

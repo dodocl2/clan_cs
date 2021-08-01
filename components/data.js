@@ -1,6 +1,6 @@
 const DATA = (() => {
     let data = {
-        version: '1.0.0.3',
+        version: '1.0.0.1',
         removeOldVersionData: true,
         values: {
             levels: (() => {
@@ -37,6 +37,7 @@ const DATA = (() => {
         teamSize: 4,
         teams: [],
         obsTeam: [],
+        obs_exceptNextTurn: true,
         obs_exceptNextTurnPercent: 90,
         lastDevideTeamsTime: null,
         changeTeamMember: {
