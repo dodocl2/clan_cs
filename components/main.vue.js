@@ -27,7 +27,7 @@ export default {
                 </select>
             </div>
             <div>
-                <button @click="devideTeams">나누기 gogo</button>
+                <button @click="devideTeams2">나누기 gogo</button>
                 <button @click="copyTeamsText">베넷 채팅용 텍스트 복사</button>
             </div>
             <div style="margin-top: 5px; font-size: 12px;">
@@ -333,11 +333,161 @@ export default {
                 }else if(b.tribe === 'zerg'){
                     return 1;
                 }
-                return this.values.levelPointIndex[b.level]
+                let s = this.values.levelPointIndex[b.level]
                                 - this.values.levelPointIndex[a.level];
+                if(s === 0){
+                    return a.name.localeCompare(b.name);
+                }
+                return s;
             };
             team.sort(compare);
             return team;
+        },
+        devideTeams2: function({}){
+            if(this.members.length === 0){
+                return {teams: [], obsTeam: []};
+            }
+
+            let renew = false;
+            if(Date.now() - this.lastDevideTeamsTime || 0 > 60000*5){
+                renew = true;
+            }
+            this.lastDevideTeamsTime = Date.now();
+
+            this.teamSize = parseInt(this.teamSize);
+            let obsMemberCount = this.members.length - (this.teamSize * this.memberCntForTeam);
+            let obsTeam = [];
+            let list = this.members.concat();
+            
+            // shuffle
+            list = list.map((a) => [Math.random(),a]).sort((a,b) => a[0]-b[0]).map((a) => a[1]);
+            
+            // 옵저버 미리 생성
+            if(obsMemberCount > 0){
+                obsTeam = list.splice(0, obsMemberCount);
+                if(this.obs_exceptNextTurn && !renew && this.obsTeam){
+                    obsTeam.forEach((obs, i) => {
+                        let prevObs = this.obsTeam.find(prev => prev.name == obs.name);
+                        if(!prevObs) return;
+                        if(Math.random() * 100 > this.obs_exceptNextTurnPercent){
+                            return;
+                        }
+                        obsTeam.splice(i, 1);
+                        obsTeam.push(list.shift());
+                        list.push(obs);
+                    })
+                }
+            }
+
+            const getCombinations = function(arr, selectCnt){
+                let results = [];
+                if (selectCnt === 1) return arr.map(value => [value]);
+
+                arr.forEach((item, index, origin) => {
+                    const rest = origin.slice(index + 1);
+                    getCombinations(rest, selectCnt - 1).forEach(comb => {
+                        comb.push( item );
+                        results.push( comb );
+                    });
+                });
+
+                return results;
+            }
+
+            // console.log('######################################## st')
+            // member combination
+            const member_comb = (() => {
+                let member_comb = getCombinations(list, 3);
+                member_comb.forEach(team => {
+                    this.sortTeam(team);
+                    this.calcTeamLevelPoints(team)
+                    // console.log( team.map(m => m.name).join(',') + ' : ' + team.points )
+                });
+                member_comb.sort((a,b) => b.points-a.points);
+                // member_comb = member_comb.slice(0, 100);
+                return member_comb;
+            })();
+            // console.log('######################################## ed')
+
+            // team combination
+            const team_comb = (() => {
+                let teams_comb = [];
+                member_comb.forEach((team, index, ori) => {
+                    const mark = (team, selected) => {
+                        team.forEach(member => {
+                            selected[member.name] = true;
+                        });
+                    }
+                    const isMarked = (team, selected) => {
+                        return team.find(member => {
+                            return selected[member.name] === true
+                        });
+                    }
+                    
+                    const srcList = ori.slice(0, index).concat(ori.slice(index+1));
+                    for(let i=0; i<srcList.length; i++){
+                        const results = [team];
+                        const selected = {};
+                        mark(team, selected);
+                        srcList.forEach(srcTeam => {
+                            if(!isMarked(srcTeam, selected)){
+                                results.push(srcTeam);
+                                mark(srcTeam, selected);
+                            }
+                        });
+                        srcList.push( srcList.shift() );
+
+                        results.gap = (() => {
+                            let list = results.map(t => t.points);
+                            return Math.max.apply(null, list) - Math.min.apply(null, list);
+                        })();
+                        teams_comb.push(results);
+                    }
+                    
+                })
+
+                let dupChk = {};
+                teams_comb = teams_comb.filter((ts, i) => {
+                    function g(team){
+                        if(!team.name){
+                            team.name = team.map(m => m.name).join(',');
+                        }
+                        return team.name;
+                    }
+                    ts.sort((a,b) => g(a).localeCompare(g(b)));
+                    g(ts);
+                    
+                    if(dupChk[ts.name] === true){
+                        return false;
+                    }else{
+                        dupChk[ts.name] = true;
+                        return true;
+                    }
+                })
+
+                teams_comb.sort((a,b) => a.gap-b.gap);
+                let maxGap = Math.max((this.teamBalance.maxGap || 1), teams_comb[0].gap);
+                let last_teams_comb = teams_comb.filter(teams => teams.gap <= maxGap);
+                
+                console.log('## team comb :', last_teams_comb.length)
+                last_teams_comb = last_teams_comb.slice(0, 1000)
+                // .forEach((results, index) => {
+                //     console.log(`######## ${index+1}, len[${results.length}], gap[${results.gap}]`);
+                //     results.forEach((team,i) => {
+                //         console.log(
+                //             (i+1)
+                //             + ' - ' + team.map(m => m.name).join(',')
+                //             + ' : ' + team.points
+                //         )
+                //     });
+                // })
+                // console.log('############### ED :', last_teams_comb.length)
+                return last_teams_comb;
+            })();
+
+            let selected_teams = team_comb[ parseInt(Math.random() * team_comb.length) ];
+            this.teams = selected_teams;
+            this.obsTeam = obsTeam;
         },
         devideTeams: function({devideOnly}){
             if(this.members.length === 0){
