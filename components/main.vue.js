@@ -444,7 +444,6 @@ export default {
                         })();
                         teams_comb.push(results);
                     }
-                    
                 })
 
                 let dupChk = {};
@@ -470,19 +469,9 @@ export default {
                 let maxGap = Math.max((this.teamBalance.maxGap || 1), teams_comb[0].gap);
                 let last_teams_comb = teams_comb.filter(teams => teams.gap <= maxGap);
                 
-                console.log('## team comb :', last_teams_comb.length)
+                console.log('## team comb : maxGap[%d], len[%d]',
+                    maxGap, last_teams_comb.length, last_teams_comb)
                 last_teams_comb = last_teams_comb.slice(0, 1000)
-                // .forEach((results, index) => {
-                //     console.log(`######## ${index+1}, len[${results.length}], gap[${results.gap}]`);
-                //     results.forEach((team,i) => {
-                //         console.log(
-                //             (i+1)
-                //             + ' - ' + team.map(m => m.name).join(',')
-                //             + ' : ' + team.points
-                //         )
-                //     });
-                // })
-                // console.log('############### ED :', last_teams_comb.length)
                 return last_teams_comb;
             })();
 

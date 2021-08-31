@@ -7,7 +7,7 @@ const DATA = (() => {
                 const levels = {};
                 let list = levels.list = [
                     {id: 'R', point: 10},
-                    {id: 'S', point: 8},
+                    {id: 'S', point: 9},
                     {id: 'A', point: 7},
                     {id: 'B', point: 6},
                     {id: 'C', point: 4},
