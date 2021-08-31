@@ -27,7 +27,7 @@ export default {
                 </select>
             </div>
             <div>
-                <button @click="devideTeams2">나누기 gogo</button>
+                <button @click.alt.prevent="devideTeams2" @click="devideTeams({event: $event})">나누기 gogo</button>
                 <button @click="copyTeamsText">베넷 채팅용 텍스트 복사</button>
             </div>
             <div style="margin-top: 5px; font-size: 12px;">
@@ -344,6 +344,7 @@ export default {
             return team;
         },
         devideTeams2: function({}){
+            console.log('# devideTeams2');
             if(this.members.length === 0){
                 return {teams: [], obsTeam: []};
             }
@@ -489,7 +490,14 @@ export default {
             this.teams = selected_teams;
             this.obsTeam = obsTeam;
         },
-        devideTeams: function({devideOnly}){
+        devideTeams: function({event, devideOnly}){
+            if(event && event.altKey){
+                return;
+            }
+            if(!devideOnly){
+                console.log('# devideTeams');
+            }
+            
             if(this.members.length === 0){
                 return {teams: [], obsTeam: []};
             }
