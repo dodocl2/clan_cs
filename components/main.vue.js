@@ -14,7 +14,7 @@ export default {
         :values="values"
         :defaultLevel="defaultLevel"
     />
-    <div class="inline-g" style="width: 400px; min-height: 200px;">
+    <div class="inline-g" style="width: 440px; min-height: 200px;">
         <div class="bd01" style="width: 100%;">
             <div>
                 <span>팀 수</span>

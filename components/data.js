@@ -10,6 +10,7 @@ const DATA = (() => {
                     {id: 'S', point: 9},
                     {id: 'A+', point: 8},
                     {id: 'A', point: 7},
+                    {id: 'B+', point: 6.5},
                     {id: 'B', point: 6},
                     {id: 'C', point: 4},
                     {id: 'D', point: 3},

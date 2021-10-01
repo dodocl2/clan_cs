@@ -98,14 +98,17 @@ select.simple {
 [data-level="A"] {
     background-color: #9dff00dd;
 }
+[data-level="B+"] {
+    background-color: #00ffb3dd;
+}
 [data-level="B"] {
-    background-color: #00ffbfdd;
+    background-color: #00ffffdd;
 }
 [data-level="C"] {
-    background-color: #00c3ffdd;
+    background-color: #0077ffdd;
 }
 [data-level="D"] {
-    background-color: #2800ffdd;
+    background-color: #8400ffdd;
 }
 
 
