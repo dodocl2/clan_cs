@@ -263,6 +263,10 @@ export default {
             if(!obj) return;
             console.log('load data :', obj);
 
+            ['values', 'defaultLevel'].forEach(name => {
+                delete obj[name];
+            });
+
             ['teams', 'obsTeam'].forEach(name => {
                 if(obj[name].findIndex(t => t == null) > -1){
                     delete obj[name];
@@ -279,7 +283,7 @@ export default {
 
             try{
                 // Object.assign(this, obj);
-                _.mergeWith(this, obj);
+                _.mergeWith(this.$data, obj);
                 for(let key in obj){
                     let value = this[key];
                     if(value === undefined || value === null) continue;
