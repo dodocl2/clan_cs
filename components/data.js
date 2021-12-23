@@ -6,14 +6,14 @@ const DATA = (() => {
             levels: (() => {
                 const levels = {};
                 let list = levels.list = [
-                    {id: 'R', point: 10},
-                    {id: 'S', point: 9},
-                    {id: 'A+', point: 8},
-                    {id: 'A', point: 7},
-                    {id: 'B+', point: 6.5},
-                    {id: 'B', point: 6},
-                    {id: 'C', point: 4},
-                    {id: 'D', point: 3},
+                    //{id: 'R', point: 10},
+                    {id: 'S', point: 10},
+                    {id: 'A+', point: 9},
+                    {id: 'A', point: 8},
+                    {id: 'B+', point: 7.5},
+                    {id: 'B', point: 7},
+                    {id: 'C', point: 6},
+                    {id: 'D', point: 5},
                 ];
                 levels.lowLevelsHandicap = -1;
                 levels.highLevelsHandicap = 1;
