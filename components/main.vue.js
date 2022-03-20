@@ -61,14 +61,14 @@ export default {
                         <span>S이상두명+</span>
                         <select class="simple" v-model="values.levels.highLevelsHandicap">
                             <option
-                                v-for="n in [1,2,3,4,5,6,7,8,9,10]"
+                                v-for="n in [0,1,2,3,4,5,6,7,8,9,10]"
                                 :value="n"
                             >{{n}}</option>
                         </select>
                         <span>B이하두명</span>
                         <select class="simple" v-model="values.levels.lowLevelsHandicap">
                             <option
-                                v-for="n in [-1,-2,-3,-4,-5,-6,-7,-8,-9,-10]"
+                                v-for="n in [0,-1,-2,-3,-4,-5,-6,-7,-8,-9,-10]"
                                 :value="n"
                             >{{n}}</option>
                         </select>
