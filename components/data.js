@@ -15,8 +15,8 @@ const DATA = (() => {
                     {id: 'C', point: 5},
                     // {id: 'D', point: 5},
                 ];
-                levels.lowLevelsHandicap = -1;
-                levels.highLevelsHandicap = 1;
+                levels.lowLevelsHandicap = 0;
+                levels.highLevelsHandicap = 0;
 
 
                 levels.lowLevels = list.slice(list.length-3).map(level => level.id);
